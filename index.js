@@ -28,6 +28,12 @@ async function run(){
             const categories = await categoriesCollection.find(query).toArray();
             res.send(categories);
         })
+        
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const categories = await categoriesCollection.find(query).toArray();
+            res.send(categories);
+        })
 
     }
     finally{
