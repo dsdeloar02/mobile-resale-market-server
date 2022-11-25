@@ -22,18 +22,73 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const categoriesCollection = client.db('mobileMarket').collection('categories');
+        const usersCollection = client.db('mobileMarket').collection('users');
+        const productsCollection = client.db('mobileMarket').collection('products');
         
         app.get('/categories', async (req, res) => {
             const query = {};
             const categories = await categoriesCollection.find(query).toArray();
             res.send(categories);
         })
-        
-        app.get('/categories', async (req, res) => {
+
+        app.get('/users', async (req, res) => {
             const query = {};
-            const categories = await categoriesCollection.find(query).toArray();
-            res.send(categories);
+            const user = await usersCollection.find(query).toArray();
+            res.send(user)
         })
+
+        app.get('/products', async (req, res) => {  
+            console.log(req.query)          
+            let query = {};
+            if(req.query.categoryName){
+                query = {
+                    categoryName: req.query.categoryName
+                }
+            }
+            const cursor = productsCollection.find(query)
+            const products = await cursor.toArray();
+            // const products = await productsCollection.find(query).toArray();
+            res.send(products)
+        })
+
+        app.get('/jwt', async(req, res) =>{
+            const email = req.query.email;
+            const query = {email:email};
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+                return res.send({ accessToken: token });
+            }
+            res.status(403).send({ accessToken: '' })
+        })
+
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.userstatus === 'seller' });
+        })
+        app.get('/users/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isBuyer: user?.userstatus === 'buyer' });
+        })
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.userstatus === 'admin' });
+        })
+        
+        
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            // console.log(user);
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        });
 
     }
     finally{
