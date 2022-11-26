@@ -25,11 +25,17 @@ async function run(){
         const usersCollection = client.db('mobileMarket').collection('users');
         const productsCollection = client.db('mobileMarket').collection('products');
         const ordersCollection = client.db('mobileMarket').collection('orders');
+        const advertisesCollection = client.db('mobileMarket').collection('advertises');
         
         app.get('/categories', async (req, res) => {
             const query = {};
             const categories = await categoriesCollection.find(query).toArray();
             res.send(categories);
+        })
+        app.get('/adproducts', async (req, res) => {
+            const query = {};
+            const result = await advertisesCollection.find(query).toArray();
+            res.send(result);
         })
 
         app.get('/users', async (req, res) => {
@@ -50,13 +56,27 @@ async function run(){
             }
             const cursor = productsCollection.find(query)
             const products = await cursor.toArray();
+            res.send(products)
+        })
+
+        app.get('/sellePproducts', async (req, res) => {  
+            console.log(req.body)          
+            let query = {};
+            if(req.query.sellerName){
+                query = {
+                    sellerName: req.query.sellerName
+                }
+            }
+            const cursor = productsCollection.find(query)
+            const products = await cursor.toArray();
             // const products = await productsCollection.find(query).toArray();
             res.send(products)
         })
 
+
         app.post('/products', async (req, res) => {
-            const doctor = req.body;
-            const result = await productsCollection.insertOne(doctor);
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
             res.send(result);
         });
 
@@ -79,6 +99,7 @@ async function run(){
             const user = await usersCollection.findOne(query);
             res.send({ isSeller: user?.userstatus === 'seller' });
         })
+        
         app.get('/users/buyer/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
@@ -114,20 +135,35 @@ async function run(){
 
         app.post('/orders', async(req, res) => {
             const order = req.body;
-            console.log(order)
-
             const query = {
                 productName: order.productName
             }
-
             const alreadyBooked = await ordersCollection.find(query).toArray();
-
             if(alreadyBooked.length){
                 const message = `You already have a booking on ${order.productName}`
                 return res.send({acknowledged: false, message})
             }
-
             const result = await ordersCollection.insertOne(order);
+            res.send(result)
+        })
+
+        app.post('/advertisProducts', async (req, res) => {
+            const advProduct = req.body;
+            const result = await advertisesCollection.insertOne(advProduct);
+            res.send(result);
+        });
+
+        app.get('/advertisProducts', async (req, res) => {
+            const query = {}; 
+            const result = await advertisesCollection.find(query).toArray();
+            res.send(result);
+        });
+
+        app.delete('/sellePproducts/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)}
+            const result = await productsCollection.deleteOne(query)
+            console.log(result)
             res.send(result)
         })
 
@@ -139,7 +175,7 @@ async function run(){
 run().catch(console.log)
 
 app.get('/', async (req, res) => {
-    res.send('doctors portal server is running');
+    res.send('Mobile Market running ');
 })
 
 app.listen(port, () => console.log(`Mobile Market running on ${port}`))
