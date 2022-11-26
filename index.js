@@ -24,6 +24,7 @@ async function run(){
         const categoriesCollection = client.db('mobileMarket').collection('categories');
         const usersCollection = client.db('mobileMarket').collection('users');
         const productsCollection = client.db('mobileMarket').collection('products');
+        const ordersCollection = client.db('mobileMarket').collection('orders');
         
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -36,6 +37,8 @@ async function run(){
             const user = await usersCollection.find(query).toArray();
             res.send(user)
         })
+
+       
 
         app.get('/products', async (req, res) => {  
             console.log(req.query)          
@@ -50,6 +53,14 @@ async function run(){
             // const products = await productsCollection.find(query).toArray();
             res.send(products)
         })
+
+        app.post('/products', async (req, res) => {
+            const doctor = req.body;
+            const result = await productsCollection.insertOne(doctor);
+            res.send(result);
+        });
+
+
 
         app.get('/jwt', async(req, res) =>{
             const email = req.query.email;
@@ -88,7 +99,37 @@ async function run(){
             // console.log(user);
             const result = await usersCollection.insertOne(user);
             res.send(result);
-        });
+        })
+
+        app.get('/orders', async (req, res) => {
+            let query = {};
+            if(req.query.email){
+                query = {
+                    email: req.query.email
+                }
+            }
+            const order = await ordersCollection.find(query).toArray();
+            res.send(order)
+        })
+
+        app.post('/orders', async(req, res) => {
+            const order = req.body;
+            console.log(order)
+
+            const query = {
+                productName: order.productName
+            }
+
+            const alreadyBooked = await ordersCollection.find(query).toArray();
+
+            if(alreadyBooked.length){
+                const message = `You already have a booking on ${order.productName}`
+                return res.send({acknowledged: false, message})
+            }
+
+            const result = await ordersCollection.insertOne(order);
+            res.send(result)
+        })
 
     }
     finally{
