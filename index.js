@@ -39,9 +39,62 @@ async function run(){
         })
 
         app.get('/users', async (req, res) => {
-            const query = {};
+            let query = {};
+            if(req.query.userstatus){
+                query = {
+                    userstatus: req.query.userstatus
+                }
+            }
             const user = await usersCollection.find(query).toArray();
             res.send(user)
+        })
+
+        app.get('/user-verify', async( req, res) => {
+            const email = req.query.sellerEmail;
+            const query = {email: email}
+            const user = await usersCollection.findOne(query);
+            let result = false;
+            if(user?.status === 'verified'){
+                result =  true;
+            }
+            res.send({result})
+
+        })
+
+        app.put('/users/admin/:id', async(req, res) => {
+            const id = req.params.id;
+            const filter = {_id: ObjectId(id)}
+            const options = { upsert: true}
+            const updatedDoc = {
+                $set: {
+                    status: 'verified'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        })
+
+        app.put('/seller/myproducts/:id', async(req, res) => {
+            const id = req.params.id;
+            const filter = {_id: ObjectId(id)}
+            const options = { upsert: true}
+            const updatedDoc = {
+                $set: {
+                    advertise:'true'
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        })
+
+
+
+        app.delete('/seller/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)}
+            const result = await usersCollection.deleteOne(query)
+            console.log(result)
+            res.send(result)
         })
 
        
@@ -147,17 +200,49 @@ async function run(){
             res.send(result)
         })
 
-        app.post('/advertisProducts', async (req, res) => {
-            const advProduct = req.body;
-            const result = await advertisesCollection.insertOne(advProduct);
+        app.get('/advertisProducts', async (req, res) => {
+            // const adproduct = req.query.advertise;
+            // const query = { adproduct : adproduct }
+            let query = {};
+            if(req.query.advertise){
+                    query = {
+                        advertise: req.query.advertise
+                    }
+                }
+            const result = await productsCollection.find(query).toArray();
             res.send(result);
         });
 
-        app.get('/advertisProducts', async (req, res) => {
-            const query = {}; 
-            const result = await advertisesCollection.find(query).toArray();
-            res.send(result);
-        });
+        // app.get('/users', async (req, res) => {
+        //     let query = {};
+        //     if(req.query.userstatus){
+        //         query = {
+        //             userstatus: req.query.userstatus
+        //         }
+        //     }
+        //     const user = await usersCollection.find(query).toArray();
+        //     res.send(user)
+        // })
+
+        // app.get('/user-verify', async( req, res) => {
+        //     const email = req.query.sellerEmail;
+        //     const query = {email: email}
+        //     const user = await usersCollection.findOne(query);
+        //     let result = false;
+        //     if(user?.status === 'verified'){
+        //         result =  true;
+        //     }
+        //     res.send({result})
+
+        // })
+
+
+
+        // app.get('/advertisProducts', async (req, res) => {
+        //     const query = {}; 
+        //     const result = await advertisesCollection.find(query).toArray();
+        //     res.send(result);
+        // });
 
         app.delete('/sellePproducts/:id', async(req, res) => {
             const id = req.params.id;
