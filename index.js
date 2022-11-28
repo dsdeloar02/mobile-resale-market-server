@@ -146,6 +146,34 @@ async function run(){
                 query = {
                     categoryName: req.query.categoryName
                 }
+
+            }
+            const cursor = productsCollection.find(query)
+            const products = await cursor.toArray();
+            res.send(products)
+        })
+        // app.get('/sold-products', async (req, res) => {  
+        //     console.log(req.query)          
+        //     let query = {};
+        //     if(req.query.sold){
+        //         query = {
+        //             sold: true
+        //         }
+        //     }
+        //     const cursor = productsCollection.find(query)
+        //     const products = await cursor.toArray();
+        //     res.send(products)
+        // })
+
+
+        app.get('/products', async (req, res) => {  
+            console.log(req.query)          
+            let query = {};
+            if(req.query.categoryName && req.query.sold){
+                query = {
+                    categoryName: req.query.categoryName,
+                    sold: true
+                }
             }
             const cursor = productsCollection.find(query)
             const products = await cursor.toArray();
