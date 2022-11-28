@@ -29,6 +29,7 @@ async function run(){
         const ordersCollection = client.db('mobileMarket').collection('orders');
         const advertisesCollection = client.db('mobileMarket').collection('advertises');
         const paymentsCollection = client.db('mobileMarket').collection('payment');
+        const whistlistsCollection = client.db('mobileMarket').collection('whistlist');
         
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -84,35 +85,6 @@ async function run(){
             res.send(result)
         })
 
-        // app.put('/orders-update', async(req, res) => {
-        //     const id = req.body.order;
-        //     const filter = {_id: ObjectId(id)}
-        //     const options = { upsert: true}
-        //     const updatedDoc = {
-        //         $set: {
-        //             status: 'verified'
-        //         }
-        //     }
-        //     const result = await ordersCollection.updateOne(filter, updatedDoc, options);
-        //     const ids = req.body.bookingsId;
-        //     const product = await productsCollection.updateOne(({_id: ObjectId(ids)}), updatedDoc, options )
-        //     res.send(result)
-        // })
-
-        // app.post('/orders-update', async(req, res) => {
-        //     const payment = req.body;
-        //     const result = await ordersCollection.insertOne(payment);
-        //     const id = payment.bookingId
-        //     const filter = {_id: ObjectId(id)}
-        //     const updatedDoc = {
-        //         $set: {
-        //             paid: true,
-        //             transactionId: payment.transactionId
-        //         }
-        //     }
-        //     const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
-        //     res.send(result);
-        // })
 
         app.put('/seller/myproducts/:id', async(req, res) => {
             const id = req.params.id;
@@ -312,6 +284,33 @@ async function run(){
             const result = await ordersCollection.insertOne(order);
             res.send(result)
         })
+
+        app.post('/whistlists', async(req, res) => {
+            const whistlist = req.body;
+            const query = {
+                productName: whistlist.productName
+            }
+            const alreadyBooked = await whistlistsCollection.find(query).toArray();
+            if(alreadyBooked.length){
+                const message = `You already have a booking on ${whistlist.productName}`
+                return res.send({acknowledged: false, message})
+            }
+            const result = await whistlistsCollection.insertOne(whistlist);
+            res.send(result)
+        })
+
+        app.get('/whistlists', async (req, res) => {
+            let query = {};
+            if(req.query.email){
+                query = {
+                    email: req.query.email
+                }
+            }
+            const whistlist = await whistlistsCollection.find(query).toArray();
+            res.send(whistlist)
+        })
+
+
 
         app.get('/advertisProducts', async (req, res) => {
             // const adproduct = req.query.advertise;
